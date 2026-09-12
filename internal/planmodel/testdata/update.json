@@ -1,0 +1,89 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.5.6",
+  "resource_changes": [
+    {
+      "address": "module.eks_sp_foundation.module.elastic_agent.kubernetes_role_binding.elastic_agent",
+      "module_address": "module.eks_sp_foundation.module.elastic_agent",
+      "mode": "managed",
+      "type": "kubernetes_role_binding",
+      "name": "elastic_agent",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": ["update"],
+        "before": {
+          "id": "elastic-integrations/quoter-elastic-agent",
+          "metadata": {
+            "name": "quoter-elastic-agent",
+            "namespace": "elastic-integrations",
+            "labels": {
+              "app.kubernetes.io/name": "elastic-agent",
+              "app.kubernetes.io/version": "9.2.2",
+              "app.kubernetes.io/managed-by": "terraform"
+            }
+          },
+          "role_ref": {
+            "kind": "Role",
+            "name": "elastic-agent"
+          }
+        },
+        "after": {
+          "id": "elastic-integrations/quoter-elastic-agent",
+          "metadata": {
+            "name": "quoter-elastic-agent",
+            "namespace": "elastic-integrations",
+            "labels": {
+              "app.kubernetes.io/name": "elastic-agent",
+              "app.kubernetes.io/version": "9.2.4",
+              "app.kubernetes.io/managed-by": "terraform"
+            }
+          },
+          "role_ref": {
+            "kind": "Role",
+            "name": "elastic-agent"
+          }
+        },
+        "after_unknown": {
+          "id": false,
+          "metadata": {
+            "name": false,
+            "namespace": false,
+            "labels": false
+          },
+          "role_ref": {
+            "kind": false,
+            "name": false
+          }
+        },
+        "before_sensitive": {
+          "metadata": {
+            "labels": {}
+          },
+          "role_ref": {}
+        },
+        "after_sensitive": {
+          "metadata": {
+            "labels": {}
+          },
+          "role_ref": {}
+        }
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.elastic_agent.kubernetes_role_binding.other",
+      "module_address": "module.eks_sp_foundation.module.elastic_agent",
+      "mode": "managed",
+      "type": "kubernetes_role_binding",
+      "name": "other",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": ["no-op"],
+        "before": { "id": "elastic-integrations/other" },
+        "after": { "id": "elastic-integrations/other" },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    }
+  ]
+}

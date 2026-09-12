@@ -1,0 +1,6 @@
+/bin/
+/dist/
+*.tfplan
+*.tfplan.json
+/tfp
+.DS_Store
