@@ -12,14 +12,19 @@ import (
 	"io"
 	"sort"
 
+	"github.com/gusandrioli/tfp/internal/filter"
 	"github.com/gusandrioli/tfp/internal/planmodel"
 	"github.com/gusandrioli/tfp/internal/summary"
 )
 
 // Text writes a terraform-plan-style textual rendering of root to w,
-// followed by a summary line.
-func Text(w io.Writer, root *planmodel.Module, rep summary.Report) error {
-	if err := writeModule(w, root); err != nil {
+// followed by a summary line. filters may be nil for an unfiltered view.
+//
+// Filtering only ever hides diff lines from the rendered output — rep
+// (built from the unfiltered tree by internal/summary) is never touched,
+// so the summary line's counts always reflect the real plan.
+func Text(w io.Writer, root *planmodel.Module, rep summary.Report, filters *filter.Set) error {
+	if err := writeModule(w, root, filters); err != nil {
 		return err
 	}
 	_, err := fmt.Fprintf(w, "\nPlan: %d to add, %d to change, %d to destroy, %d to replace, %d to forget.\n",
@@ -27,13 +32,13 @@ func Text(w io.Writer, root *planmodel.Module, rep summary.Report) error {
 	return err
 }
 
-func writeModule(w io.Writer, m *planmodel.Module) error {
+func writeModule(w io.Writer, m *planmodel.Module, filters *filter.Set) error {
 	resources := make([]*planmodel.Resource, len(m.Resources))
 	copy(resources, m.Resources)
 	sort.Slice(resources, func(i, j int) bool { return resources[i].Address < resources[j].Address })
 
 	for _, r := range resources {
-		if err := writeResource(w, r); err != nil {
+		if err := writeResource(w, r, filters); err != nil {
 			return err
 		}
 	}
@@ -43,22 +48,32 @@ func writeModule(w io.Writer, m *planmodel.Module) error {
 	sort.Slice(children, func(i, j int) bool { return children[i].Address() < children[j].Address() })
 
 	for _, c := range children {
-		if err := writeModule(w, c); err != nil {
+		if err := writeModule(w, c, filters); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func writeResource(w io.Writer, r *planmodel.Resource) error {
+func writeResource(w io.Writer, r *planmodel.Resource, filters *filter.Set) error {
 	if _, err := fmt.Fprintf(w, "\n  # %s %s\n", r.Address, actionPhrase(r.Kind)); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprintf(w, "  %s resource %q %q {\n", r.Kind.Symbol(), r.Type, r.Name); err != nil {
 		return err
 	}
+	hidden := 0
 	for _, d := range r.Diffs {
+		if filters.Hides(r.Type, d) {
+			hidden++
+			continue
+		}
 		if err := writeDiff(w, d); err != nil {
+			return err
+		}
+	}
+	if hidden > 0 {
+		if _, err := fmt.Fprintf(w, "      # %d change(s) filtered\n", hidden); err != nil {
 			return err
 		}
 	}
