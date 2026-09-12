@@ -1,0 +1,503 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.9.0",
+  "resource_changes": [
+    {
+      "address": "aws_s3_bucket.assets",
+      "module_address": "",
+      "mode": "managed",
+      "type": "aws_s3_bucket",
+      "name": "assets",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "bucket": "quoter-prod-assets",
+          "force_destroy": false,
+          "tags": {
+            "team": "platform"
+          }
+        },
+        "after_unknown": {
+          "id": true,
+          "arn": true
+        },
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "aws_instance.legacy",
+      "module_address": "",
+      "mode": "managed",
+      "type": "aws_instance",
+      "name": "legacy",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete"
+        ],
+        "before": {
+          "id": "i-0a1b2c3d4e5f6789",
+          "instance_type": "t3.medium",
+          "ami": "ami-0abcdef1234567890"
+        },
+        "after": null,
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.vpc.aws_subnet.private[0]",
+      "module_address": "module.vpc",
+      "mode": "managed",
+      "type": "aws_subnet",
+      "name": "private",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "cidr_block": "10.0.0.0/24",
+          "availability_zone": "us-east-1a",
+          "map_public_ip_on_launch": false
+        },
+        "after_unknown": {
+          "id": true,
+          "arn": true
+        },
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.vpc.aws_subnet.private[1]",
+      "module_address": "module.vpc",
+      "mode": "managed",
+      "type": "aws_subnet",
+      "name": "private",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "create"
+        ],
+        "before": null,
+        "after": {
+          "cidr_block": "10.0.1.0/24",
+          "availability_zone": "us-east-1b",
+          "map_public_ip_on_launch": false
+        },
+        "after_unknown": {
+          "id": true,
+          "arn": true
+        },
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.elastic_agent.kubernetes_role_binding.elastic_agent",
+      "module_address": "module.eks_sp_foundation.module.elastic_agent",
+      "mode": "managed",
+      "type": "kubernetes_role_binding",
+      "name": "elastic_agent",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "id": "elastic-integrations/quoter-elastic-agent",
+          "metadata": {
+            "name": "quoter-elastic-agent",
+            "namespace": "elastic-integrations",
+            "labels": {
+              "app.kubernetes.io/name": "elastic-agent",
+              "app.kubernetes.io/version": "9.2.2",
+              "app.kubernetes.io/managed-by": "terraform"
+            }
+          },
+          "role_ref": {
+            "kind": "Role",
+            "name": "elastic-agent"
+          }
+        },
+        "after": {
+          "id": "elastic-integrations/quoter-elastic-agent",
+          "metadata": {
+            "name": "quoter-elastic-agent",
+            "namespace": "elastic-integrations",
+            "labels": {
+              "app.kubernetes.io/name": "elastic-agent",
+              "app.kubernetes.io/version": "9.2.4",
+              "app.kubernetes.io/managed-by": "terraform"
+            }
+          },
+          "role_ref": {
+            "kind": "Role",
+            "name": "elastic-agent-v2"
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.elastic_agent.kubernetes_deployment.elastic_agent",
+      "module_address": "module.eks_sp_foundation.module.elastic_agent",
+      "mode": "managed",
+      "type": "kubernetes_deployment",
+      "name": "elastic_agent",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "metadata": {
+            "name": "elastic-agent",
+            "namespace": "elastic-integrations",
+            "labels": {
+              "app.kubernetes.io/name": "elastic-agent",
+              "app.kubernetes.io/version": "9.2.2"
+            }
+          }
+        },
+        "after": {
+          "metadata": {
+            "name": "elastic-agent",
+            "namespace": "elastic-integrations",
+            "labels": {
+              "app.kubernetes.io/name": "elastic-agent",
+              "app.kubernetes.io/version": "9.2.4"
+            }
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.elastic_agent.kubernetes_config_map.elastic_agent_config",
+      "module_address": "module.eks_sp_foundation.module.elastic_agent",
+      "mode": "managed",
+      "type": "kubernetes_config_map",
+      "name": "elastic_agent_config",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "metadata": {
+            "name": "elastic-agent-config",
+            "namespace": "elastic-integrations",
+            "labels": {
+              "app.kubernetes.io/name": "elastic-agent",
+              "app.kubernetes.io/version": "9.2.2"
+            }
+          }
+        },
+        "after": {
+          "metadata": {
+            "name": "elastic-agent-config",
+            "namespace": "elastic-integrations",
+            "labels": {
+              "app.kubernetes.io/name": "elastic-agent",
+              "app.kubernetes.io/version": "9.2.4"
+            }
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.otel_collector.kubernetes_role_binding.otel_collector",
+      "module_address": "module.eks_sp_foundation.module.otel_collector",
+      "mode": "managed",
+      "type": "kubernetes_role_binding",
+      "name": "otel_collector",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "metadata": {
+            "name": "otel-collector",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "otel-collector",
+              "app.kubernetes.io/version": "9.2.2"
+            }
+          }
+        },
+        "after": {
+          "metadata": {
+            "name": "otel-collector",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "otel-collector",
+              "app.kubernetes.io/version": "9.2.4"
+            }
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.otel_collector.kubernetes_deployment.otel_collector",
+      "module_address": "module.eks_sp_foundation.module.otel_collector",
+      "mode": "managed",
+      "type": "kubernetes_deployment",
+      "name": "otel_collector",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "metadata": {
+            "name": "otel-collector",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "otel-collector",
+              "app.kubernetes.io/version": "9.2.2"
+            }
+          }
+        },
+        "after": {
+          "metadata": {
+            "name": "otel-collector",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "otel-collector",
+              "app.kubernetes.io/version": "9.2.4"
+            }
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.otel_collector.kubernetes_service.otel_collector",
+      "module_address": "module.eks_sp_foundation.module.otel_collector",
+      "mode": "managed",
+      "type": "kubernetes_service",
+      "name": "otel_collector",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "metadata": {
+            "name": "otel-collector",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "otel-collector",
+              "app.kubernetes.io/version": "9.2.2"
+            }
+          },
+          "spec": {
+            "port": [
+              {
+                "port": 443,
+                "target_port": "4317"
+              }
+            ]
+          }
+        },
+        "after": {
+          "metadata": {
+            "name": "otel-collector",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "otel-collector",
+              "app.kubernetes.io/version": "9.2.4"
+            }
+          },
+          "spec": {
+            "port": [
+              {
+                "port": 8443,
+                "target_port": "4317"
+              }
+            ]
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.fluentbit.kubernetes_daemonset.fluentbit",
+      "module_address": "module.eks_sp_foundation.module.fluentbit",
+      "mode": "managed",
+      "type": "kubernetes_daemonset",
+      "name": "fluentbit",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "metadata": {
+            "name": "fluentbit",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "fluentbit",
+              "app.kubernetes.io/version": "9.2.2"
+            }
+          }
+        },
+        "after": {
+          "metadata": {
+            "name": "fluentbit",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "fluentbit",
+              "app.kubernetes.io/version": "9.2.4"
+            }
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.fluentbit.kubernetes_role_binding.fluentbit",
+      "module_address": "module.eks_sp_foundation.module.fluentbit",
+      "mode": "managed",
+      "type": "kubernetes_role_binding",
+      "name": "fluentbit",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "metadata": {
+            "name": "fluentbit",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "fluentbit",
+              "app.kubernetes.io/version": "9.2.2"
+            }
+          }
+        },
+        "after": {
+          "metadata": {
+            "name": "fluentbit",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "fluentbit",
+              "app.kubernetes.io/version": "9.2.4"
+            }
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    },
+    {
+      "address": "module.eks_sp_foundation.module.fluentbit.kubernetes_secret.fluentbit_token",
+      "module_address": "module.eks_sp_foundation.module.fluentbit",
+      "mode": "managed",
+      "type": "kubernetes_secret",
+      "name": "fluentbit_token",
+      "provider_name": "registry.terraform.io/hashicorp/kubernetes",
+      "change": {
+        "actions": [
+          "update"
+        ],
+        "before": {
+          "metadata": {
+            "name": "fluentbit-token",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "fluentbit",
+              "app.kubernetes.io/version": "9.2.2"
+            }
+          },
+          "data": {
+            "token": "b3JpZ2luYWwtdG9rZW4="
+          }
+        },
+        "after": {
+          "metadata": {
+            "name": "fluentbit-token",
+            "namespace": "observability",
+            "labels": {
+              "app.kubernetes.io/name": "fluentbit",
+              "app.kubernetes.io/version": "9.2.4"
+            }
+          },
+          "data": {
+            "token": "cm90YXRlZC10b2tlbg=="
+          }
+        },
+        "after_unknown": {},
+        "before_sensitive": {
+          "data": {
+            "token": true
+          }
+        },
+        "after_sensitive": {
+          "data": {
+            "token": true
+          }
+        }
+      }
+    },
+    {
+      "address": "module.rds.aws_db_instance.primary",
+      "module_address": "module.rds",
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "primary",
+      "provider_name": "registry.terraform.io/hashicorp/aws",
+      "change": {
+        "actions": [
+          "delete",
+          "create"
+        ],
+        "before": {
+          "id": "db-old123",
+          "arn": "arn:aws:rds:us-east-1:123456789012:db:db-old123",
+          "engine_version": "13.7",
+          "instance_class": "db.r6g.large"
+        },
+        "after": {
+          "instance_class": "db.r6g.large",
+          "engine_version": "15.4"
+        },
+        "after_unknown": {
+          "id": true,
+          "arn": true,
+          "engine_version": false
+        },
+        "before_sensitive": {},
+        "after_sensitive": {}
+      }
+    }
+  ]
+}
