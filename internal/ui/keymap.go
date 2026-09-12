@@ -8,6 +8,8 @@ import "github.com/charmbracelet/bubbles/key"
 type keyMap struct {
 	Up           key.Binding
 	Down         key.Binding
+	GotoTop      key.Binding
+	GotoBottom   key.Binding
 	Toggle       key.Binding // collapse/expand a module row, or enter a resource's detail
 	SwitchFocus  key.Binding
 	FilterGlobal key.Binding
@@ -15,6 +17,7 @@ type keyMap struct {
 	TogglePanel  key.Binding
 	ClearFilters key.Binding
 	Remove       key.Binding // remove the selected rule, when the filter panel is focused
+	Help         key.Binding
 	Quit         key.Binding
 }
 
@@ -26,6 +29,14 @@ var defaultKeyMap = keyMap{
 	Down: key.NewBinding(
 		key.WithKeys("j", "down"),
 		key.WithHelp("j/↓", "down"),
+	),
+	GotoTop: key.NewBinding(
+		key.WithKeys("g"),
+		key.WithHelp("g", "jump to top"),
+	),
+	GotoBottom: key.NewBinding(
+		key.WithKeys("G"),
+		key.WithHelp("G", "jump to bottom"),
 	),
 	Toggle: key.NewBinding(
 		key.WithKeys("enter", " "),
@@ -54,6 +65,10 @@ var defaultKeyMap = keyMap{
 	Remove: key.NewBinding(
 		key.WithKeys("d", "backspace"),
 		key.WithHelp("d", "remove rule"),
+	),
+	Help: key.NewBinding(
+		key.WithKeys("?"),
+		key.WithHelp("?", "help"),
 	),
 	Quit: key.NewBinding(
 		key.WithKeys("q", "ctrl+c"),

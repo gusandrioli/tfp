@@ -151,3 +151,43 @@ func TestModel_Quit(t *testing.T) {
 		t.Error("expected an empty view once quitting")
 	}
 }
+
+func TestModel_HelpOverlay(t *testing.T) {
+	m := newTestModel(t, "create.json")
+
+	m = update(t, m, key('?'))
+	view := m.View()
+	if !strings.Contains(view, "tfp — keybindings") {
+		t.Fatalf("expected the help overlay to be shown:\n%s", view)
+	}
+
+	// Other keys are inert while help is open.
+	m = update(t, m, key('j'))
+	if !strings.Contains(m.View(), "tfp — keybindings") {
+		t.Fatal("expected an unrelated key to leave the help overlay open")
+	}
+
+	m = update(t, m, key('?'))
+	if strings.Contains(m.View(), "tfp — keybindings") {
+		t.Fatal("expected ? to close the help overlay")
+	}
+}
+
+func TestModel_GotoTopBottom(t *testing.T) {
+	m := newTestModel(t, "create.json")
+
+	m = update(t, m, key('G'))
+	atBottom := m.View()
+	if !strings.Contains(atBottom, "module.child") {
+		t.Fatalf("expected the cursor at the last row (module.child):\n%s", atBottom)
+	}
+
+	m = update(t, m, key('g'))
+	// After jumping to top, the first root resource's detail should be
+	// reachable — a cheap way to confirm the cursor actually moved back
+	// without inspecting unexported state.
+	m = update(t, m, tea.KeyMsg{Type: tea.KeyEnter})
+	if !strings.Contains(m.View(), "will be created") {
+		t.Fatalf("expected the top row's resource detail after g:\n%s", m.View())
+	}
+}

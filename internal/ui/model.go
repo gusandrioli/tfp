@@ -49,6 +49,8 @@ type Model struct {
 	showFilters  bool
 	filterCursor int
 
+	showHelp bool
+
 	width, height int
 	quitting      bool
 }
@@ -114,6 +116,16 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case key.Matches(msg, defaultKeyMap.Quit):
 		m.quitting = true
 		return m, tea.Quit
+	case key.Matches(msg, defaultKeyMap.Help):
+		m.showHelp = !m.showHelp
+		return m, nil
+	}
+	if m.showHelp {
+		// Any other key is inert while the help overlay is open.
+		return m, nil
+	}
+
+	switch {
 	case key.Matches(msg, defaultKeyMap.SwitchFocus):
 		if m.focus == focusTree {
 			m.focus = focusDetail
@@ -160,6 +172,12 @@ func (m Model) handleTreeKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.cursor++
 			m.detailCursor = 0
 		}
+	case key.Matches(msg, defaultKeyMap.GotoTop):
+		m.cursor = 0
+		m.detailCursor = 0
+	case key.Matches(msg, defaultKeyMap.GotoBottom):
+		m.cursor = max(len(m.rows)-1, 0)
+		m.detailCursor = 0
 	case key.Matches(msg, defaultKeyMap.Toggle):
 		row := m.selectedRow()
 		if row == nil {
@@ -244,6 +262,9 @@ func (m Model) handleFiltersKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	if m.quitting {
 		return ""
+	}
+	if m.showHelp {
+		return m.renderHelp()
 	}
 
 	top := lipgloss.JoinHorizontal(lipgloss.Top, m.renderTree(), m.renderDetail())
@@ -440,8 +461,34 @@ func formatRule(r filter.Rule) string {
 
 func (m Model) renderStatusBar() string {
 	left := fmt.Sprintf("%d filter(s) active · %d diff(s) hidden", len(m.filters.Rules()), m.hiddenCount())
-	right := "j/k move · tab switch · enter select/toggle · f/F filter · p filters · ctrl+r clear · q quit"
+	right := "j/k move · g/G top/bottom · tab switch · enter select/toggle · f/F filter · p filters · ? help · q quit"
 	return styleStatusBar.Render(left + "   " + right)
+}
+
+// helpBindings lists every binding worth documenting, in display order —
+// the single source of truth for the "?" overlay, so it can never list a
+// binding that Update doesn't actually handle (or vice versa).
+func helpBindings() []key.Binding {
+	k := defaultKeyMap
+	return []key.Binding{
+		k.Up, k.Down, k.GotoTop, k.GotoBottom, k.SwitchFocus, k.Toggle,
+		k.FilterGlobal, k.FilterByType, k.TogglePanel, k.Remove, k.ClearFilters,
+		k.Help, k.Quit,
+	}
+}
+
+func (m Model) renderHelp() string {
+	var b strings.Builder
+	b.WriteString(styleTitle.Render("tfp — keybindings"))
+	b.WriteString("\n\n")
+	for _, binding := range helpBindings() {
+		h := binding.Help()
+		fmt.Fprintf(&b, "  %-10s %s\n", h.Key, h.Desc)
+	}
+	b.WriteString("\npress ? to close")
+
+	style := stylePane
+	return style.Width(m.effectiveWidth() - 4).Render(strings.TrimRight(b.String(), "\n"))
 }
 
 func (m Model) hiddenCount() int {
