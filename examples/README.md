@@ -49,3 +49,8 @@ In the TUI:
   `spec.port[0].port` is.
 - `kubernetes_secret.fluentbit_token` shows `(sensitive value)` on both
   sides of its diff.
+- Press `s` on any resource to expand it: `kubernetes_role_binding.elastic_agent`
+  is a good one — you'll see `role_ref.kind`, `metadata.namespace`, and
+  the untouched labels alongside the one that changed. `s` again to
+  collapse back to diffs-only; the mode stays on as you move between
+  resources.

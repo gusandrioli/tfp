@@ -11,6 +11,7 @@ type keyMap struct {
 	GotoTop      key.Binding
 	GotoBottom   key.Binding
 	Toggle       key.Binding // collapse/expand a module row, or enter a resource's detail
+	Expand       key.Binding // toggle showing a resource's full attribute set, not just its diffs
 	SwitchFocus  key.Binding
 	FilterGlobal key.Binding
 	FilterByType key.Binding
@@ -41,6 +42,10 @@ var defaultKeyMap = keyMap{
 	Toggle: key.NewBinding(
 		key.WithKeys("enter", " "),
 		key.WithHelp("enter", "toggle/select"),
+	),
+	Expand: key.NewBinding(
+		key.WithKeys("s"),
+		key.WithHelp("s", "expand resource"),
 	),
 	SwitchFocus: key.NewBinding(
 		key.WithKeys("tab"),

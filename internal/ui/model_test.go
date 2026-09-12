@@ -191,3 +191,99 @@ func TestModel_GotoTopBottom(t *testing.T) {
 		t.Fatalf("expected the top row's resource detail after g:\n%s", m.View())
 	}
 }
+
+func TestModel_ExpandShowsUnchangedAttributes(t *testing.T) {
+	m := newTestModel(t, "update.json")
+
+	m = update(t, m, key('j'))
+	m = update(t, m, tea.KeyMsg{Type: tea.KeyEnter}) // expand module.elastic_agent
+	m = update(t, m, key('j'))                       // -> resource row
+	m = update(t, m, tea.KeyMsg{Type: tea.KeyEnter}) // enter detail focus
+
+	before := m.View()
+	if strings.Contains(before, `metadata.name`) {
+		t.Fatalf("did not expect an unchanged attribute before expanding:\n%s", before)
+	}
+
+	m = update(t, m, key('s'))
+	after := m.View()
+	if !strings.Contains(after, `metadata.name = "quoter-elastic-agent"`) {
+		t.Fatalf("expected an unchanged attribute after pressing s:\n%s", after)
+	}
+	if !strings.Contains(after, `app.kubernetes.io/version`) {
+		t.Fatalf("expected the changed attribute to still show its diff:\n%s", after)
+	}
+	if !strings.Contains(after, "(s to collapse)") {
+		t.Fatalf("expected a mode indicator in the header:\n%s", after)
+	}
+
+	// Toggle back off.
+	m = update(t, m, key('s'))
+	if strings.Contains(m.View(), `metadata.name`) {
+		t.Fatal("expected unchanged attributes to disappear again after collapsing")
+	}
+}
+
+func TestModel_ExpandPersistsAcrossResources(t *testing.T) {
+	m := newTestModel(t, "create.json")
+	m = update(t, m, key('s')) // toggle on while a root resource is selected (row 0)
+
+	// Rows sort alphabetically: row 0 is random_password.this, which
+	// has "keepers" unchanged (null before and after) — only visible in
+	// full mode.
+	if !strings.Contains(m.View(), "keepers = null") {
+		t.Fatalf("expected full mode to already apply to the first resource:\n%s", m.View())
+	}
+
+	// Move to random_pet.this (row 1); expand mode should still be on.
+	// It has "prefix" unchanged (also null before and after).
+	m = update(t, m, key('j'))
+	if !strings.Contains(m.View(), "prefix = null") {
+		t.Fatalf("expected expand mode to persist across resources:\n%s", m.View())
+	}
+}
+
+func TestModel_ExpandUnchangedLineIgnoresFilter(t *testing.T) {
+	m := newTestModel(t, "update.json")
+	m = update(t, m, key('j'))
+	m = update(t, m, tea.KeyMsg{Type: tea.KeyEnter})
+	m = update(t, m, key('j'))
+	m = update(t, m, tea.KeyMsg{Type: tea.KeyEnter})
+	m = update(t, m, key('s')) // expand
+
+	// Cursor starts at 0, which in full mode is the first attribute in
+	// path order — "id", unchanged. Pressing f on it must not create a
+	// filter rule (nothing to hide).
+	m = update(t, m, key('f'))
+	if strings.Contains(m.View(), "1 filter(s) active") {
+		t.Fatal("expected f on an unchanged line to be a no-op")
+	}
+}
+
+func TestModel_ExpandScrollsWithinDetailPane(t *testing.T) {
+	root := loadFixture(t, "create.json")
+	rep := summary.Build(root)
+	m := ui.New(root, rep)
+	// A short window: random_password.this has 13 attributes, more than
+	// fit in a height-8 pane once the header/footer lines are reserved.
+	m = update(t, m, tea.WindowSizeMsg{Width: 100, Height: 8})
+	m = update(t, m, key('s'))                       // expand, cursor still on row 0 (random_password.this)
+	m = update(t, m, tea.KeyMsg{Type: tea.KeyEnter}) // enter detail focus
+
+	top := m.View()
+	if !strings.Contains(top, "bcrypt_hash") {
+		t.Fatalf("expected the first attribute visible at the top:\n%s", top)
+	}
+
+	// Walk the cursor down past the visible window.
+	for range 10 {
+		m = update(t, m, key('j'))
+	}
+	scrolled := m.View()
+	if strings.Contains(scrolled, "bcrypt_hash") {
+		t.Errorf("expected the top attribute to have scrolled out of view:\n%s", scrolled)
+	}
+	if !strings.Contains(scrolled, "override_special") {
+		t.Errorf("expected attributes further down the list to be visible after scrolling:\n%s", scrolled)
+	}
+}

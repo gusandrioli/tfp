@@ -51,6 +51,12 @@ type Model struct {
 
 	showHelp bool
 
+	// showFullResource toggles the detail pane between diffs-only (the
+	// default) and every attribute, changed or not — "expand" mode, for
+	// reviewing a change with full context. A global mode rather than
+	// per-resource, so it stays on as you move between resources.
+	showFullResource bool
+
 	width, height int
 	quitting      bool
 }
@@ -88,15 +94,22 @@ func (m Model) selectedRow() *Row {
 	return &m.rows[m.cursor]
 }
 
-// visibleDiffs returns r's diffs not hidden by the active filters.
-func (m Model) visibleDiffs(r *planmodel.Resource) []planmodel.AttributeDiff {
-	out := make([]planmodel.AttributeDiff, 0, len(r.Diffs))
-	for _, d := range r.Diffs {
+// currentDetailLines returns the lines the detail pane shows for r,
+// filtered by the active rules — every attribute (changed or not) in
+// "full resource" mode, changed leaves only otherwise — plus the
+// pre-filter count so callers can report how many were hidden.
+func (m Model) currentDetailLines(r *planmodel.Resource) (lines []planmodel.AttributeDiff, total int) {
+	all := r.Diffs
+	if m.showFullResource {
+		all = r.FullAttributes()
+	}
+	lines = make([]planmodel.AttributeDiff, 0, len(all))
+	for _, d := range all {
 		if !m.filters.Hides(r.Type, d) {
-			out = append(out, d)
+			lines = append(lines, d)
 		}
 	}
-	return out
+	return lines, len(all)
 }
 
 // Update implements tea.Model.
@@ -145,6 +158,10 @@ func (m Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case key.Matches(msg, defaultKeyMap.ClearFilters):
 		m.filters.Clear()
+		return m, nil
+	case key.Matches(msg, defaultKeyMap.Expand):
+		m.showFullResource = !m.showFullResource
+		m.detailCursor = 0
 		return m, nil
 	}
 
@@ -201,7 +218,7 @@ func (m Model) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if row == nil || row.Kind != RowResource {
 		return m, nil
 	}
-	diffs := m.visibleDiffs(row.Resource)
+	lines, _ := m.currentDetailLines(row.Resource)
 
 	switch {
 	case key.Matches(msg, defaultKeyMap.Up):
@@ -209,30 +226,32 @@ func (m Model) handleDetailKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.detailCursor--
 		}
 	case key.Matches(msg, defaultKeyMap.Down):
-		if m.detailCursor < len(diffs)-1 {
+		if m.detailCursor < len(lines)-1 {
 			m.detailCursor++
 		}
 	case key.Matches(msg, defaultKeyMap.FilterGlobal):
-		m.addFilter(row.Resource, diffs, filter.Rule{Scope: filter.ScopeGlobal})
+		m.addFilter(row.Resource, lines, filter.Rule{Scope: filter.ScopeGlobal})
 	case key.Matches(msg, defaultKeyMap.FilterByType):
-		m.addFilter(row.Resource, diffs, filter.Rule{Scope: filter.ScopeResourceType, ResourceType: row.Resource.Type})
+		m.addFilter(row.Resource, lines, filter.Rule{Scope: filter.ScopeResourceType, ResourceType: row.Resource.Type})
 	}
 	return m, nil
 }
 
-// addFilter adds a rule (with PathSuffix filled in from the diff under
+// addFilter adds a rule (with PathSuffix filled in from the line under
 // the cursor) and re-clamps detailCursor, since applying it will usually
-// shrink the visible diff list out from under the current position.
+// shrink the visible line list out from under the current position. A
+// no-op on an unchanged line (only reachable in "full resource" mode) —
+// there's nothing there to filter.
 func (m *Model) addFilter(r *planmodel.Resource, visible []planmodel.AttributeDiff, rule filter.Rule) {
-	if m.detailCursor >= len(visible) {
+	if m.detailCursor >= len(visible) || !visible[m.detailCursor].Changed {
 		return
 	}
 	rule.PathSuffix = visible[m.detailCursor].Path
 	m.filters.Add(rule)
 
-	remaining := len(m.visibleDiffs(r))
-	if m.detailCursor >= remaining {
-		m.detailCursor = max(0, remaining-1)
+	remaining, _ := m.currentDetailLines(r)
+	if m.detailCursor >= len(remaining) {
+		m.detailCursor = max(0, len(remaining)-1)
 	}
 }
 
@@ -408,17 +427,30 @@ func (m Model) renderDetail() string {
 		b.WriteString(styleDimmed.Render("Select a resource to see its changes."))
 	default:
 		r := row.Resource
-		fmt.Fprintf(&b, "%s %s\n\n", r.Address, render.ActionPhrase(r.Kind))
-		diffs := m.visibleDiffs(r)
-		for i, d := range diffs {
-			line := render.FormatDiff(d)
+		header := r.Address + " " + render.ActionPhrase(r.Kind)
+		if m.showFullResource {
+			header += styleDimmed.Render(" — full resource (s to collapse)")
+		}
+		fmt.Fprintf(&b, "%s\n\n", header)
+
+		lines, total := m.currentDetailLines(r)
+		hidden := total - len(lines)
+		reserved := 2 // the header line + the blank line after it
+		if hidden > 0 {
+			reserved++ // the "N change(s) filtered" footer line
+		}
+		linesHeight := max(height-reserved, 1)
+		start, end := visibleWindow(len(lines), linesHeight, m.detailCursor)
+
+		for i := start; i < end; i++ {
+			line := render.FormatAttributeLine(lines[i])
 			if m.focus == focusDetail && i == m.detailCursor {
 				line = styleSelected.Render(line)
 			}
 			b.WriteString(line)
 			b.WriteByte('\n')
 		}
-		if hidden := len(r.Diffs) - len(diffs); hidden > 0 {
+		if hidden > 0 {
 			fmt.Fprintf(&b, "%s\n", styleDimmed.Render(fmt.Sprintf("# %d change(s) filtered", hidden)))
 		}
 	}
@@ -461,7 +493,7 @@ func formatRule(r filter.Rule) string {
 
 func (m Model) renderStatusBar() string {
 	left := fmt.Sprintf("%d filter(s) active · %d diff(s) hidden", len(m.filters.Rules()), m.hiddenCount())
-	right := "j/k move · g/G top/bottom · tab switch · enter select/toggle · f/F filter · p filters · ? help · q quit"
+	right := "j/k move · g/G top/bottom · tab switch · enter select/toggle · f/F filter · s expand · p filters · ? help · q quit"
 	return styleStatusBar.Render(left + "   " + right)
 }
 
@@ -472,7 +504,7 @@ func helpBindings() []key.Binding {
 	k := defaultKeyMap
 	return []key.Binding{
 		k.Up, k.Down, k.GotoTop, k.GotoBottom, k.SwitchFocus, k.Toggle,
-		k.FilterGlobal, k.FilterByType, k.TogglePanel, k.Remove, k.ClearFilters,
+		k.Expand, k.FilterGlobal, k.FilterByType, k.TogglePanel, k.Remove, k.ClearFilters,
 		k.Help, k.Quit,
 	}
 }
@@ -516,10 +548,7 @@ func visibleWindow(total, height, cursor int) (start, end int) {
 	if height <= 0 || total <= height {
 		return 0, total
 	}
-	start = cursor - height/2
-	if start < 0 {
-		start = 0
-	}
+	start = max(cursor-height/2, 0)
 	end = start + height
 	if end > total {
 		end = total

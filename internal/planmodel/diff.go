@@ -5,6 +5,12 @@ import (
 	"sort"
 )
 
+// leafFunc is called once for every leaf walkTree visits: either a
+// genuine scalar/nil leaf, or an entire subtree collapsed because it's
+// marked unknown (in which case unknown is true and before/after cover
+// the whole subtree, not a single scalar).
+type leafFunc func(path AttributePath, before, after any, unknown, sensitive bool)
+
 // diffValues walks before/after (both decoded from JSON, so composed of
 // map[string]interface{}, []interface{}, and scalars/nil) in lockstep,
 // alongside terraform's parallel afterUnknown/beforeSensitive/afterSensitive
@@ -12,24 +18,40 @@ import (
 // changed. Equal subtrees are pruned entirely rather than materialized.
 func diffValues(before, after, afterUnknown, beforeSensitive, afterSensitive any) []AttributeDiff {
 	var out []AttributeDiff
-	walkDiff(before, after, afterUnknown, beforeSensitive, afterSensitive, nil, &out)
+	walkTree(before, after, afterUnknown, beforeSensitive, afterSensitive, nil, func(path AttributePath, b, a any, unknown, sensitive bool) {
+		if !unknown && reflect.DeepEqual(b, a) {
+			return // equal and not a forced-unknown leaf: prune
+		}
+		out = append(out, AttributeDiff{Path: path, Before: b, After: a, Unknown: unknown, Sensitive: sensitive, Changed: true})
+	})
 	return out
 }
 
-func walkDiff(before, after, afterUnknown, beforeSensitive, afterSensitive any, path AttributePath, out *[]AttributeDiff) {
+// fullAttributeValues is diffValues' counterpart for the "expand" view:
+// it walks the same tree but keeps every leaf, changed or not, so the
+// full resource can be shown for context — not just what's different.
+func fullAttributeValues(before, after, afterUnknown, beforeSensitive, afterSensitive any) []AttributeDiff {
+	var out []AttributeDiff
+	walkTree(before, after, afterUnknown, beforeSensitive, afterSensitive, nil, func(path AttributePath, b, a any, unknown, sensitive bool) {
+		changed := unknown || !reflect.DeepEqual(b, a)
+		out = append(out, AttributeDiff{Path: path, Before: b, After: a, Unknown: unknown, Sensitive: sensitive, Changed: changed})
+	})
+	return out
+}
+
+// walkTree walks before/after in lockstep, alongside terraform's
+// parallel afterUnknown/beforeSensitive/afterSensitive marker trees, and
+// calls handle once per leaf (see leafFunc). It has no opinion on
+// whether unchanged leaves matter — diffValues and fullAttributeValues
+// each decide that for themselves in their handle callback.
+func walkTree(before, after, afterUnknown, beforeSensitive, afterSensitive any, path AttributePath, handle leafFunc) {
 	sensitive := boolMarker(beforeSensitive) || boolMarker(afterSensitive)
 
 	if boolMarker(afterUnknown) {
 		// The whole subtree at this path is computed at apply time.
 		// Don't recurse into it — we have nothing truthful to compare
-		// per-leaf, so it renders as one "(known after apply)" diff.
-		*out = append(*out, AttributeDiff{
-			Path:      clonePath(path),
-			Before:    before,
-			After:     after,
-			Unknown:   true,
-			Sensitive: sensitive,
-		})
+		// per-leaf, so it renders as one "(known after apply)" leaf.
+		handle(clonePath(path), before, after, true, sensitive)
 		return
 	}
 
@@ -44,10 +66,10 @@ func walkDiff(before, after, afterUnknown, beforeSensitive, afterSensitive any, 
 		// afterUnknown marker tree — so the key set must include the
 		// marker trees too, not just before/after themselves.
 		for _, key := range unionMapKeys(beforeMap, afterMap, auMap, bsMap, asMap) {
-			walkDiff(
+			walkTree(
 				beforeMap[key], afterMap[key],
 				subMapMarker(afterUnknown, key), subMapMarker(beforeSensitive, key), subMapMarker(afterSensitive, key),
-				append(path, PathSegment{Key: key}), out,
+				append(path, PathSegment{Key: key}), handle,
 			)
 		}
 		return
@@ -69,24 +91,17 @@ func walkDiff(before, after, afterUnknown, beforeSensitive, afterSensitive any, 
 				a = afterList[i]
 			}
 			idx := i
-			walkDiff(
+			walkTree(
 				b, a,
 				subListMarker(afterUnknown, i), subListMarker(beforeSensitive, i), subListMarker(afterSensitive, i),
-				append(path, PathSegment{Index: &idx}), out,
+				append(path, PathSegment{Index: &idx}), handle,
 			)
 		}
 		return
 	}
 
 	// Scalar (or nil) leaf.
-	if !reflect.DeepEqual(before, after) {
-		*out = append(*out, AttributeDiff{
-			Path:      clonePath(path),
-			Before:    before,
-			After:     after,
-			Sensitive: sensitive,
-		})
-	}
+	handle(clonePath(path), before, after, false, sensitive)
 }
 
 func clonePath(path AttributePath) AttributePath {

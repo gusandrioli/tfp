@@ -7,6 +7,8 @@ package planmodel
 import (
 	"strconv"
 	"strings"
+
+	tfjson "github.com/hashicorp/terraform-json"
 )
 
 // ChangeKind is tfp's normalized view of tfjson's Actions slice.
@@ -115,6 +117,27 @@ type Resource struct {
 	Kind      ChangeKind
 	Diffs     []AttributeDiff
 	Sensitive bool // true if any changed leaf is marked sensitive
+
+	// change is retained (not copied — just the same pointer already
+	// held by the parsed tfjson.Plan) so FullAttributes can walk the
+	// full before/after bodies on demand, without every Resource paying
+	// for that walk up front when most are never expanded.
+	change *tfjson.Change
+}
+
+// FullAttributes returns every leaf attribute of the resource, changed
+// or not — the "expand" view's data source. Unlike Diffs, unchanged
+// leaves are included too (with Changed = false), so a resource can be
+// reviewed in full context rather than just its diff. Computed lazily;
+// nil if the resource carries no change data (never happens via Parse,
+// but keeps the zero value of Resource safe to call this on).
+func (r *Resource) FullAttributes() []AttributeDiff {
+	if r.change == nil {
+		return nil
+	}
+	attrs := fullAttributeValues(r.change.Before, r.change.After, r.change.AfterUnknown, r.change.BeforeSensitive, r.change.AfterSensitive)
+	markForcesReplacement(attrs, r.change.ReplacePaths)
+	return attrs
 }
 
 // PathSegment is one step into an attribute tree: either a map/object key
@@ -220,4 +243,8 @@ type AttributeDiff struct {
 	Unknown           bool // value not known until apply (tfjson AfterUnknown)
 	Sensitive         bool // value redacted in display
 	ForcesReplacement bool // this attribute is why the resource must be replaced
+	// Changed is true for every entry in Resource.Diffs (they exist
+	// because they changed). It's false for the unchanged leaves that
+	// only appear in Resource.FullAttributes' "expand" view.
+	Changed bool
 }

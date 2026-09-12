@@ -225,3 +225,73 @@ func TestParse_Delete(t *testing.T) {
 		}
 	}
 }
+
+func TestFullAttributes_IncludesUnchangedLeaves(t *testing.T) {
+	root := loadFixture(t, "update.json")
+	r := findResource(root, "module.eks_sp_foundation.module.elastic_agent.kubernetes_role_binding.elastic_agent")
+	if r == nil {
+		t.Fatal("kubernetes_role_binding.elastic_agent not found")
+	}
+
+	full := r.FullAttributes()
+
+	byPath := make(map[string]AttributeDiff, len(full))
+	for _, d := range full {
+		byPath[d.Path.String()] = d
+	}
+
+	// The changed label must appear, and be marked Changed.
+	changed, ok := byPath[`metadata.labels["app.kubernetes.io/version"]`]
+	if !ok {
+		t.Fatal(`expected metadata.labels["app.kubernetes.io/version"] in FullAttributes`)
+	}
+	if !changed.Changed || changed.Before != "9.2.2" || changed.After != "9.2.4" {
+		t.Errorf(`metadata.labels["app.kubernetes.io/version"] = %+v, want Changed=true, 9.2.2 -> 9.2.4`, changed)
+	}
+
+	// Untouched leaves — pruned from Diffs — must still show up here,
+	// marked unchanged, with their current value.
+	for path, want := range map[string]string{
+		`metadata.labels["app.kubernetes.io/name"]`: "elastic-agent",
+		"metadata.name": "quoter-elastic-agent",
+		"role_ref.kind": "Role",
+	} {
+		d, ok := byPath[path]
+		if !ok {
+			t.Fatalf("expected %s in FullAttributes", path)
+		}
+		if d.Changed {
+			t.Errorf("%s: Changed = true, want false (unchanged)", path)
+		}
+		if d.After != want {
+			t.Errorf("%s: After = %v, want %q", path, d.After, want)
+		}
+	}
+
+	// FullAttributes must be a strict superset of Diffs.
+	if len(full) <= len(r.Diffs) {
+		t.Errorf("len(FullAttributes) = %d, want more than len(Diffs) = %d", len(full), len(r.Diffs))
+	}
+}
+
+func TestFullAttributes_ForcesReplacementStillApplies(t *testing.T) {
+	root := loadFixture(t, "replace.json")
+	r := findResource(root, "module.child.null_resource.labeled")
+	if r == nil {
+		t.Fatal("module.child.null_resource.labeled not found")
+	}
+
+	full := r.FullAttributes()
+	var found bool
+	for _, d := range full {
+		if d.Path.String() == `triggers["app.kubernetes.io/version"]` {
+			found = true
+			if !d.ForcesReplacement {
+				t.Error("expected ForcesReplacement = true in FullAttributes, matching Diffs")
+			}
+		}
+	}
+	if !found {
+		t.Fatal(`expected triggers["app.kubernetes.io/version"] in FullAttributes`)
+	}
+}

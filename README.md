@@ -65,6 +65,7 @@ terraform show -json tfplan.binary | tfp show -
 | `enter` / `space` | Collapse/expand a module, or open a resource's detail |
 | `f` | Hide this attribute change everywhere it occurs |
 | `F` | Hide it, but only for this resource type |
+| `s` | Toggle expand: show every attribute of the selected resource, not just its diffs |
 | `p` | Toggle the active-filters panel (remove one with `d`) |
 | `ctrl+r` | Clear all filters |
 | `?` | Full keybinding help |

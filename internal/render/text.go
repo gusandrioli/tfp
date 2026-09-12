@@ -101,6 +101,22 @@ func FormatDiff(d planmodel.AttributeDiff) string {
 	return line
 }
 
+// FormatAttributeLine renders one line of a resource's full attribute
+// dump (see planmodel.Resource.FullAttributes): a changed leaf renders
+// exactly like FormatDiff; an unchanged leaf renders plain — its
+// current value, no change symbol — indented to line up with the
+// changed lines around it.
+func FormatAttributeLine(d planmodel.AttributeDiff) string {
+	if d.Changed {
+		return FormatDiff(d)
+	}
+	value := formatValue(d.After)
+	if d.Sensitive {
+		value = "(sensitive value)"
+	}
+	return "  " + d.Path.String() + " = " + value
+}
+
 func diffSymbolAndRHS(d planmodel.AttributeDiff) (symbol, rhs string) {
 	before, after := formatValue(d.Before), formatValue(d.After)
 	if d.Sensitive {

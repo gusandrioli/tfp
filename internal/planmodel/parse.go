@@ -42,6 +42,7 @@ func buildTree(changes []*tfjson.ResourceChange) *Module {
 			Name:    rc.Name,
 			Kind:    kind,
 			Diffs:   diffValues(rc.Change.Before, rc.Change.After, rc.Change.AfterUnknown, rc.Change.BeforeSensitive, rc.Change.AfterSensitive),
+			change:  rc.Change,
 		}
 		markForcesReplacement(res.Diffs, rc.Change.ReplacePaths)
 		res.Sensitive = anySensitive(res.Diffs)
