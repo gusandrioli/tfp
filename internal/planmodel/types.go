@@ -177,28 +177,47 @@ func (p AttributePath) HasSuffix(suffix AttributePath) bool {
 	}
 	offset := len(p) - len(suffix)
 	for i, seg := range suffix {
-		other := p[offset+i]
-		if (seg.Index == nil) != (other.Index == nil) {
-			return false
-		}
-		if seg.Index != nil {
-			if *seg.Index != *other.Index {
-				return false
-			}
-			continue
-		}
-		if seg.Key != other.Key {
+		if !segmentsEqual(seg, p[offset+i]) {
 			return false
 		}
 	}
 	return true
 }
 
+// HasPrefix reports whether p starts with the given prefix path, matching
+// segment-by-segment. Used to test whether a diff falls under one of a
+// resource's ReplacePaths — those name the attribute that forced
+// replacement, which may be an ancestor of (or equal to) any given diff's
+// own path (e.g. a diff at triggers["team"] falls under a replace path
+// of just ["triggers"]).
+func (p AttributePath) HasPrefix(prefix AttributePath) bool {
+	if len(prefix) > len(p) {
+		return false
+	}
+	for i, seg := range prefix {
+		if !segmentsEqual(seg, p[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func segmentsEqual(a, b PathSegment) bool {
+	if (a.Index == nil) != (b.Index == nil) {
+		return false
+	}
+	if a.Index != nil {
+		return *a.Index == *b.Index
+	}
+	return a.Key == b.Key
+}
+
 // AttributeDiff is one changed leaf value within a resource.
 type AttributeDiff struct {
-	Path      AttributePath
-	Before    any
-	After     any
-	Unknown   bool // value not known until apply (tfjson AfterUnknown)
-	Sensitive bool // value redacted in display
+	Path              AttributePath
+	Before            any
+	After             any
+	Unknown           bool // value not known until apply (tfjson AfterUnknown)
+	Sensitive         bool // value redacted in display
+	ForcesReplacement bool // this attribute is why the resource must be replaced
 }

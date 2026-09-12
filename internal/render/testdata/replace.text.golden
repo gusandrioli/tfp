@@ -2,9 +2,9 @@
   # module.child.null_resource.labeled must be replaced
   -/+ resource "null_resource" "labeled" {
       ~ id = "3493970986057272581" -> (known after apply)
-      ~ triggers["app.kubernetes.io/version"] = "9.2.2" -> "9.2.4"
-      + triggers.region = "us-east-1"
-      - triggers.team = "platform"
+      ~ triggers["app.kubernetes.io/version"] = "9.2.2" -> "9.2.4" # forces replacement
+      + triggers.region = "us-east-1" # forces replacement
+      - triggers.team = "platform" # forces replacement
     }
 
 Plan: 0 to add, 0 to change, 0 to destroy, 1 to replace, 0 to forget.

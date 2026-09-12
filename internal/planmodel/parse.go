@@ -3,6 +3,7 @@ package planmodel
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	tfjson "github.com/hashicorp/terraform-json"
@@ -42,6 +43,7 @@ func buildTree(changes []*tfjson.ResourceChange) *Module {
 			Kind:    kind,
 			Diffs:   diffValues(rc.Change.Before, rc.Change.After, rc.Change.AfterUnknown, rc.Change.BeforeSensitive, rc.Change.AfterSensitive),
 		}
+		markForcesReplacement(res.Diffs, rc.Change.ReplacePaths)
 		res.Sensitive = anySensitive(res.Diffs)
 
 		mod := ensureModule(index, root, modulePathSegments(rc.ModuleAddress))
@@ -69,6 +71,45 @@ func kindFromActions(a tfjson.Actions) ChangeKind {
 	default:
 		return ChangeUnknown
 	}
+}
+
+// markForcesReplacement flags diffs that fall under one of a replace
+// resource's ReplacePaths — the attribute(s) terraform says are why the
+// resource must be recreated rather than updated in place. raw is
+// tfjson's Change.ReplacePaths: a slice of paths, each itself a slice of
+// string (map/object key) or float64 (list/set index) segments.
+func markForcesReplacement(diffs []AttributeDiff, raw []any) {
+	if len(raw) == 0 {
+		return
+	}
+	paths := convertReplacePaths(raw)
+	for i := range diffs {
+		if slices.ContainsFunc(paths, diffs[i].Path.HasPrefix) {
+			diffs[i].ForcesReplacement = true
+		}
+	}
+}
+
+func convertReplacePaths(raw []any) []AttributePath {
+	paths := make([]AttributePath, 0, len(raw))
+	for _, item := range raw {
+		segs, ok := item.([]any)
+		if !ok {
+			continue
+		}
+		path := make(AttributePath, 0, len(segs))
+		for _, seg := range segs {
+			switch v := seg.(type) {
+			case string:
+				path = append(path, PathSegment{Key: v})
+			case float64:
+				idx := int(v)
+				path = append(path, PathSegment{Index: &idx})
+			}
+		}
+		paths = append(paths, path)
+	}
+	return paths
 }
 
 func anySensitive(diffs []AttributeDiff) bool {

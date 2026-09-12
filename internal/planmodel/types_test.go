@@ -36,3 +36,25 @@ func TestAttributePath_HasSuffix(t *testing.T) {
 		t.Error("a longer suffix than the path itself must not match")
 	}
 }
+
+func TestAttributePath_HasPrefix(t *testing.T) {
+	idx0, idx1 := 0, 1
+	full := AttributePath{{Key: "triggers"}, {Key: "app.kubernetes.io/version"}}
+	prefix := AttributePath{{Key: "triggers"}}
+
+	if !full.HasPrefix(prefix) {
+		t.Error("expected full to have prefix")
+	}
+	if !full.HasPrefix(full) {
+		t.Error("a path must be its own prefix (exact match)")
+	}
+	if full.HasPrefix(AttributePath{{Key: "spec"}}) {
+		t.Error("did not expect a differing key to match")
+	}
+	if (AttributePath{{Index: &idx0}}).HasPrefix(AttributePath{{Index: &idx1}}) {
+		t.Error("differing indices should not match")
+	}
+	if prefix.HasPrefix(full) {
+		t.Error("a longer prefix than the path itself must not match")
+	}
+}

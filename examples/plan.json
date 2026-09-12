@@ -343,7 +343,13 @@
         },
         "after_unknown": {},
         "before_sensitive": {},
-        "after_sensitive": {}
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "spec",
+            "port"
+          ]
+        ]
       }
     },
     {
@@ -496,7 +502,12 @@
           "engine_version": false
         },
         "before_sensitive": {},
-        "after_sensitive": {}
+        "after_sensitive": {},
+        "replace_paths": [
+          [
+            "engine_version"
+          ]
+        ]
       }
     }
   ]

@@ -183,6 +183,25 @@ func TestParse_Replace_ModuleAddressAndMapChurn(t *testing.T) {
 	if d := findDiff(r, `triggers.team`); d == nil || d.Before != "platform" || d.After != nil {
 		t.Fatalf(`triggers.team diff = %+v, want "platform" -> nil`, d)
 	}
+
+	// terraform reported replace_paths: [["triggers"]] for this resource
+	// (triggers is a ForceNew attribute on null_resource) — every diff
+	// under that path should be flagged as the reason for replacement,
+	// so the UI can show it.
+	for _, path := range []string{`triggers["app.kubernetes.io/version"]`, "triggers.region", "triggers.team"} {
+		d := findDiff(r, path)
+		if d == nil {
+			t.Fatalf("expected a diff at %s", path)
+		}
+		if !d.ForcesReplacement {
+			t.Errorf("%s: ForcesReplacement = false, want true", path)
+		}
+	}
+	// "id" changing is a side effect of replacement, not itself the
+	// cause — it must not be flagged.
+	if d := findDiff(r, "id"); d == nil || d.ForcesReplacement {
+		t.Errorf(`"id" diff = %+v, want ForcesReplacement = false`, d)
+	}
 	// The unrelated "app.kubernetes.io/name" trigger key is unchanged
 	// and must be pruned.
 	if d := findDiff(r, `triggers["app.kubernetes.io/name"]`); d != nil {

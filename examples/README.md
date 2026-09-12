@@ -42,5 +42,10 @@ In the TUI:
 - `module.rds.aws_db_instance.primary` shows a replace with
   `(known after apply)` on `id`/`arn` alongside a real
   `engine_version` change, to exercise that rendering path.
+- Both replace resources (`kubernetes_service.otel_collector` and
+  `aws_db_instance.primary`) mark the one attribute that actually forced
+  the replacement with `# forces replacement` — the label change on the
+  service is real but incidental, so it's *not* flagged, only
+  `spec.port[0].port` is.
 - `kubernetes_secret.fluentbit_token` shows `(sensitive value)` on both
   sides of its diff.

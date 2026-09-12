@@ -87,12 +87,18 @@ func writeDiff(w io.Writer, d planmodel.AttributeDiff) error {
 }
 
 // FormatDiff renders a single attribute diff the way terraform plan text
-// does, e.g. `~ metadata.labels["app.kubernetes.io/version"] = "9.2.2" -> "9.2.4"`.
-// Exported so internal/ui can render the same line in the detail pane
-// without duplicating the unknown/sensitive-value handling.
+// does, e.g. `~ metadata.labels["app.kubernetes.io/version"] = "9.2.2" -> "9.2.4"`,
+// with a trailing `# forces replacement` when this attribute is why the
+// resource can't just be updated in place. Exported so internal/ui can
+// render the same line in the detail pane without duplicating the
+// unknown/sensitive-value/forces-replacement handling.
 func FormatDiff(d planmodel.AttributeDiff) string {
 	symbol, rhs := diffSymbolAndRHS(d)
-	return symbol + " " + d.Path.String() + " = " + rhs
+	line := symbol + " " + d.Path.String() + " = " + rhs
+	if d.ForcesReplacement {
+		line += " # forces replacement"
+	}
+	return line
 }
 
 func diffSymbolAndRHS(d planmodel.AttributeDiff) (symbol, rhs string) {

@@ -13,12 +13,11 @@ type usageError struct{ error }
 func newUsageError(err error) error { return usageError{err} }
 
 func exitCodeForError(err error) int {
-	switch {
-	case errors.Is(err, context.Canceled):
+	if errors.Is(err, context.Canceled) {
 		return 130
-	case errors.As(err, &usageError{}):
-		return 2
-	default:
-		return 1
 	}
+	if _, ok := errors.AsType[usageError](err); ok {
+		return 2
+	}
+	return 1
 }

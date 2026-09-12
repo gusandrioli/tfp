@@ -64,3 +64,16 @@ func TestDiffSymbolAndRHS(t *testing.T) {
 		})
 	}
 }
+
+func TestFormatDiff_ForcesReplacement(t *testing.T) {
+	plain := planmodel.AttributeDiff{Path: planmodel.AttributePath{{Key: "content"}}, Before: "v1", After: "v2"}
+	if got, want := FormatDiff(plain), `~ content = "v1" -> "v2"`; got != want {
+		t.Errorf("FormatDiff(%+v) = %q, want %q", plain, got, want)
+	}
+
+	forcing := plain
+	forcing.ForcesReplacement = true
+	if got, want := FormatDiff(forcing), `~ content = "v1" -> "v2" # forces replacement`; got != want {
+		t.Errorf("FormatDiff(%+v) = %q, want %q", forcing, got, want)
+	}
+}

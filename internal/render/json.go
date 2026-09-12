@@ -12,11 +12,12 @@ import (
 // jsonDiff mirrors planmodel.AttributeDiff with a rendered Path, so it
 // serializes as a readable string rather than the internal segment slice.
 type jsonDiff struct {
-	Path      string `json:"path"`
-	Before    any    `json:"before,omitempty"`
-	After     any    `json:"after,omitempty"`
-	Unknown   bool   `json:"unknown,omitempty"`
-	Sensitive bool   `json:"sensitive,omitempty"`
+	Path              string `json:"path"`
+	Before            any    `json:"before,omitempty"`
+	After             any    `json:"after,omitempty"`
+	Unknown           bool   `json:"unknown,omitempty"`
+	Sensitive         bool   `json:"sensitive,omitempty"`
+	ForcesReplacement bool   `json:"forces_replacement,omitempty"`
 }
 
 type jsonResource struct {
@@ -77,11 +78,12 @@ func toJSONResource(r *planmodel.Resource, filters *filter.Set) jsonResource {
 			continue
 		}
 		out.Diffs = append(out.Diffs, jsonDiff{
-			Path:      d.Path.String(),
-			Before:    d.Before,
-			After:     d.After,
-			Unknown:   d.Unknown,
-			Sensitive: d.Sensitive,
+			Path:              d.Path.String(),
+			Before:            d.Before,
+			After:             d.After,
+			Unknown:           d.Unknown,
+			Sensitive:         d.Sensitive,
+			ForcesReplacement: d.ForcesReplacement,
 		})
 	}
 	return out
