@@ -95,3 +95,7 @@ make build   # bin/tfp
 make test
 make lint    # requires golangci-lint
 ```
+
+## License
+
+[MIT](LICENSE)
