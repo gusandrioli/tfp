@@ -1,0 +1,61 @@
+{
+  "total": {
+    "Create": 0,
+    "Update": 0,
+    "Delete": 0,
+    "Replace": 1,
+    "Forget": 0
+  },
+  "by_module": {
+    "": {
+      "Create": 0,
+      "Update": 0,
+      "Delete": 0,
+      "Replace": 1,
+      "Forget": 0
+    },
+    "module.child": {
+      "Create": 0,
+      "Update": 0,
+      "Delete": 0,
+      "Replace": 1,
+      "Forget": 0
+    }
+  },
+  "modules": {
+    "address": "",
+    "children": [
+      {
+        "address": "module.child",
+        "resources": [
+          {
+            "address": "module.child.null_resource.labeled",
+            "type": "null_resource",
+            "name": "labeled",
+            "kind": "replace",
+            "diffs": [
+              {
+                "path": "id",
+                "before": "3493970986057272581",
+                "unknown": true
+              },
+              {
+                "path": "triggers[\"app.kubernetes.io/version\"]",
+                "before": "9.2.2",
+                "after": "9.2.4"
+              },
+              {
+                "path": "triggers.region",
+                "after": "us-east-1"
+              },
+              {
+                "path": "triggers.team",
+                "before": "platform"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

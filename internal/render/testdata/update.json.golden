@@ -1,0 +1,60 @@
+{
+  "total": {
+    "Create": 0,
+    "Update": 1,
+    "Delete": 0,
+    "Replace": 0,
+    "Forget": 0
+  },
+  "by_module": {
+    "": {
+      "Create": 0,
+      "Update": 1,
+      "Delete": 0,
+      "Replace": 0,
+      "Forget": 0
+    },
+    "module.eks_sp_foundation": {
+      "Create": 0,
+      "Update": 1,
+      "Delete": 0,
+      "Replace": 0,
+      "Forget": 0
+    },
+    "module.eks_sp_foundation.module.elastic_agent": {
+      "Create": 0,
+      "Update": 1,
+      "Delete": 0,
+      "Replace": 0,
+      "Forget": 0
+    }
+  },
+  "modules": {
+    "address": "",
+    "children": [
+      {
+        "address": "module.eks_sp_foundation",
+        "children": [
+          {
+            "address": "module.eks_sp_foundation.module.elastic_agent",
+            "resources": [
+              {
+                "address": "module.eks_sp_foundation.module.elastic_agent.kubernetes_role_binding.elastic_agent",
+                "type": "kubernetes_role_binding",
+                "name": "elastic_agent",
+                "kind": "update",
+                "diffs": [
+                  {
+                    "path": "metadata.labels[\"app.kubernetes.io/version\"]",
+                    "before": "9.2.2",
+                    "after": "9.2.4"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

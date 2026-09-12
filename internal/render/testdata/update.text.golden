@@ -1,0 +1,7 @@
+
+  # module.eks_sp_foundation.module.elastic_agent.kubernetes_role_binding.elastic_agent will be updated in-place
+  ~ resource "kubernetes_role_binding" "elastic_agent" {
+      ~ metadata.labels["app.kubernetes.io/version"] = "9.2.2" -> "9.2.4"
+    }
+
+Plan: 0 to add, 1 to change, 0 to destroy, 0 to replace, 0 to forget.

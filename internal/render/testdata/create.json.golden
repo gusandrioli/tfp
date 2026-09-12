@@ -1,0 +1,143 @@
+{
+  "total": {
+    "Create": 3,
+    "Update": 0,
+    "Delete": 0,
+    "Replace": 0,
+    "Forget": 0
+  },
+  "by_module": {
+    "": {
+      "Create": 3,
+      "Update": 0,
+      "Delete": 0,
+      "Replace": 0,
+      "Forget": 0
+    },
+    "module.child": {
+      "Create": 1,
+      "Update": 0,
+      "Delete": 0,
+      "Replace": 0,
+      "Forget": 0
+    }
+  },
+  "modules": {
+    "address": "",
+    "resources": [
+      {
+        "address": "random_password.this",
+        "type": "random_password",
+        "name": "this",
+        "kind": "create",
+        "diffs": [
+          {
+            "path": "bcrypt_hash",
+            "unknown": true,
+            "sensitive": true
+          },
+          {
+            "path": "id",
+            "unknown": true
+          },
+          {
+            "path": "length",
+            "after": 16
+          },
+          {
+            "path": "lower",
+            "after": true
+          },
+          {
+            "path": "min_lower",
+            "after": 0
+          },
+          {
+            "path": "min_numeric",
+            "after": 0
+          },
+          {
+            "path": "min_special",
+            "after": 0
+          },
+          {
+            "path": "min_upper",
+            "after": 0
+          },
+          {
+            "path": "number",
+            "after": true
+          },
+          {
+            "path": "numeric",
+            "after": true
+          },
+          {
+            "path": "result",
+            "unknown": true,
+            "sensitive": true
+          },
+          {
+            "path": "special",
+            "after": true
+          },
+          {
+            "path": "upper",
+            "after": true
+          }
+        ]
+      },
+      {
+        "address": "random_pet.this",
+        "type": "random_pet",
+        "name": "this",
+        "kind": "create",
+        "diffs": [
+          {
+            "path": "id",
+            "unknown": true
+          },
+          {
+            "path": "length",
+            "after": 2
+          },
+          {
+            "path": "separator",
+            "after": "-"
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "address": "module.child",
+        "resources": [
+          {
+            "address": "module.child.null_resource.labeled",
+            "type": "null_resource",
+            "name": "labeled",
+            "kind": "create",
+            "diffs": [
+              {
+                "path": "id",
+                "unknown": true
+              },
+              {
+                "path": "triggers[\"app.kubernetes.io/name\"]",
+                "after": "quoter"
+              },
+              {
+                "path": "triggers[\"app.kubernetes.io/version\"]",
+                "after": "9.2.2"
+              },
+              {
+                "path": "triggers.team",
+                "after": "platform"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

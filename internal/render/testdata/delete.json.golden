@@ -1,0 +1,143 @@
+{
+  "total": {
+    "Create": 0,
+    "Update": 0,
+    "Delete": 3,
+    "Replace": 0,
+    "Forget": 0
+  },
+  "by_module": {
+    "": {
+      "Create": 0,
+      "Update": 0,
+      "Delete": 3,
+      "Replace": 0,
+      "Forget": 0
+    },
+    "module.child": {
+      "Create": 0,
+      "Update": 0,
+      "Delete": 1,
+      "Replace": 0,
+      "Forget": 0
+    }
+  },
+  "modules": {
+    "address": "",
+    "resources": [
+      {
+        "address": "random_password.this",
+        "type": "random_password",
+        "name": "this",
+        "kind": "delete",
+        "diffs": [
+          {
+            "path": "bcrypt_hash",
+            "before": "$2a$10$dOxueNurNETST.JSL99EN.d6sFcFUwFbifHgocNPuNltnz6t0huaC",
+            "sensitive": true
+          },
+          {
+            "path": "id",
+            "before": "none"
+          },
+          {
+            "path": "length",
+            "before": 16
+          },
+          {
+            "path": "lower",
+            "before": true
+          },
+          {
+            "path": "min_lower",
+            "before": 0
+          },
+          {
+            "path": "min_numeric",
+            "before": 0
+          },
+          {
+            "path": "min_special",
+            "before": 0
+          },
+          {
+            "path": "min_upper",
+            "before": 0
+          },
+          {
+            "path": "number",
+            "before": true
+          },
+          {
+            "path": "numeric",
+            "before": true
+          },
+          {
+            "path": "result",
+            "before": "Xsu@oh)GnDQDk\u0026JS",
+            "sensitive": true
+          },
+          {
+            "path": "special",
+            "before": true
+          },
+          {
+            "path": "upper",
+            "before": true
+          }
+        ]
+      },
+      {
+        "address": "random_pet.this",
+        "type": "random_pet",
+        "name": "this",
+        "kind": "delete",
+        "diffs": [
+          {
+            "path": "id",
+            "before": "eager-gator"
+          },
+          {
+            "path": "length",
+            "before": 2
+          },
+          {
+            "path": "separator",
+            "before": "-"
+          }
+        ]
+      }
+    ],
+    "children": [
+      {
+        "address": "module.child",
+        "resources": [
+          {
+            "address": "module.child.null_resource.labeled",
+            "type": "null_resource",
+            "name": "labeled",
+            "kind": "delete",
+            "diffs": [
+              {
+                "path": "id",
+                "before": "3493970986057272581"
+              },
+              {
+                "path": "triggers[\"app.kubernetes.io/name\"]",
+                "before": "quoter"
+              },
+              {
+                "path": "triggers[\"app.kubernetes.io/version\"]",
+                "before": "9.2.2"
+              },
+              {
+                "path": "triggers.team",
+                "before": "platform"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
