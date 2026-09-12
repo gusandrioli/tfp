@@ -56,7 +56,7 @@ func writeModule(w io.Writer, m *planmodel.Module, filters *filter.Set) error {
 }
 
 func writeResource(w io.Writer, r *planmodel.Resource, filters *filter.Set) error {
-	if _, err := fmt.Fprintf(w, "\n  # %s %s\n", r.Address, actionPhrase(r.Kind)); err != nil {
+	if _, err := fmt.Fprintf(w, "\n  # %s %s\n", r.Address, ActionPhrase(r.Kind)); err != nil {
 		return err
 	}
 	if _, err := fmt.Fprintf(w, "  %s resource %q %q {\n", r.Kind.Symbol(), r.Type, r.Name); err != nil {
@@ -82,9 +82,17 @@ func writeResource(w io.Writer, r *planmodel.Resource, filters *filter.Set) erro
 }
 
 func writeDiff(w io.Writer, d planmodel.AttributeDiff) error {
-	symbol, rhs := diffSymbolAndRHS(d)
-	_, err := fmt.Fprintf(w, "      %s %s = %s\n", symbol, d.Path.String(), rhs)
+	_, err := fmt.Fprintf(w, "      %s\n", FormatDiff(d))
 	return err
+}
+
+// FormatDiff renders a single attribute diff the way terraform plan text
+// does, e.g. `~ metadata.labels["app.kubernetes.io/version"] = "9.2.2" -> "9.2.4"`.
+// Exported so internal/ui can render the same line in the detail pane
+// without duplicating the unknown/sensitive-value handling.
+func FormatDiff(d planmodel.AttributeDiff) string {
+	symbol, rhs := diffSymbolAndRHS(d)
+	return symbol + " " + d.Path.String() + " = " + rhs
 }
 
 func diffSymbolAndRHS(d planmodel.AttributeDiff) (symbol, rhs string) {
@@ -114,7 +122,9 @@ func diffSymbolAndRHS(d planmodel.AttributeDiff) (symbol, rhs string) {
 	}
 }
 
-func actionPhrase(k planmodel.ChangeKind) string {
+// ActionPhrase renders the human-readable phrase terraform plan text
+// uses for a change kind, e.g. "will be updated in-place".
+func ActionPhrase(k planmodel.ChangeKind) string {
 	switch k {
 	case planmodel.ChangeCreate:
 		return "will be created"
