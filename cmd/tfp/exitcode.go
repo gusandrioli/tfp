@@ -10,6 +10,8 @@ import (
 // distinct from a runtime failure, so Execute can map it to exit code 2.
 type usageError struct{ error }
 
+func newUsageError(err error) error { return usageError{err} }
+
 func exitCodeForError(err error) int {
 	switch {
 	case errors.Is(err, context.Canceled):

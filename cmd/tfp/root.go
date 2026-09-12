@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -16,9 +17,16 @@ func newRootCmd() *cobra.Command {
 		SilenceErrors: true,
 	}
 
-	cmd.AddCommand(newPlanCmd())
+	planCmd := newPlanCmd()
+	cmd.AddCommand(planCmd)
 	cmd.AddCommand(newShowCmd())
 	cmd.AddCommand(newVersionCmd())
+
+	// `tfp` with no subcommand behaves exactly like `tfp plan`: same
+	// flags (shared backing variables via AddFlagSet, not copies) and
+	// the same RunE.
+	cmd.RunE = planCmd.RunE
+	cmd.Flags().AddFlagSet(planCmd.Flags())
 
 	return cmd
 }
@@ -27,6 +35,10 @@ func newRootCmd() *cobra.Command {
 func Execute() int {
 	cmd := newRootCmd()
 	if err := cmd.Execute(); err != nil {
+		var changes changesPresentSignal
+		if errors.As(err, &changes) {
+			return 3
+		}
 		fmt.Fprintln(os.Stderr, "tfp:", err)
 		return exitCodeForError(err)
 	}

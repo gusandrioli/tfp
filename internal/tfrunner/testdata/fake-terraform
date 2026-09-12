@@ -1,0 +1,23 @@
+#!/bin/sh
+# A minimal terraform stand-in for tests: never touches a real backend,
+# just does enough to exercise tfrunner's exit-code and stdout handling.
+set -eu
+
+case "$1" in
+  plan)
+    echo "fake plan progress (stdout, must not leak to the live stream)"
+    echo "fake plan stderr line" >&2
+    exit "${FAKE_TF_PLAN_EXIT:-0}"
+    ;;
+  show)
+    if [ -n "${FAKE_TF_SHOW_FAIL:-}" ]; then
+      echo "fake show error" >&2
+      exit 1
+    fi
+    cat "${FAKE_TF_SHOW_JSON:?FAKE_TF_SHOW_JSON must be set}"
+    ;;
+  *)
+    echo "fake-terraform: unrecognized subcommand $1" >&2
+    exit 1
+    ;;
+esac
