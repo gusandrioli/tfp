@@ -119,7 +119,8 @@ func runPlan(ctx context.Context, opts Options, args []string) (changesPresent b
 		return false, nil
 	}
 
-	if exitErr, ok := errors.AsType[*exec.ExitError](runErr); ok && exitErr.ExitCode() == 2 {
+	var exitErr *exec.ExitError
+	if errors.As(runErr, &exitErr) && exitErr.ExitCode() == 2 {
 		return true, nil
 	}
 	return false, fmt.Errorf("tfrunner: terraform plan: %w", runErr)

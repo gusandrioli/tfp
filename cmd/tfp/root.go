@@ -35,7 +35,8 @@ func newRootCmd() *cobra.Command {
 func Execute() int {
 	cmd := newRootCmd()
 	if err := cmd.Execute(); err != nil {
-		if _, ok := errors.AsType[changesPresentSignal](err); ok {
+		var changes changesPresentSignal
+		if errors.As(err, &changes) {
 			return 3
 		}
 		fmt.Fprintln(os.Stderr, "tfp:", err)

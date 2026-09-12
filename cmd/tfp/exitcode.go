@@ -16,7 +16,8 @@ func exitCodeForError(err error) int {
 	if errors.Is(err, context.Canceled) {
 		return 130
 	}
-	if _, ok := errors.AsType[usageError](err); ok {
+	var usage usageError
+	if errors.As(err, &usage) {
 		return 2
 	}
 	return 1
