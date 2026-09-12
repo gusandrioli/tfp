@@ -5,8 +5,8 @@ Terraform config behind it, just enough structure to exercise every
 feature: nested modules two levels deep, a create/delete/update/replace
 mix, a sensitive value, and a computed-until-apply attribute.
 
-It's built around the exact noisy-label scenario from
-[`../docs/PLAN.md`](../docs/PLAN.md): the label
+It's built around the exact noisy-label scenario from the project's
+original design brief: the label
 `app.kubernetes.io/version` bumps from `9.2.2` to `9.2.4` across 8
 resources spread over `module.eks_sp_foundation`'s three child modules.
 Seven of those resources have *only* that change; one

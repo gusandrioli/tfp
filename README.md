@@ -88,16 +88,6 @@ Exit codes: `0` no changes, `3` changes present (text/json mode only —
 lets a script branch without parsing output), `1` a real error, `2` bad
 flags/args.
 
-## Documentation
-
-Design and implementation notes live in [`docs/`](docs/):
-
-- [`ARCHITECTURE.md`](docs/ARCHITECTURE.md) — system design, package layout, data flow
-- [`DATA_MODEL.md`](docs/DATA_MODEL.md) — domain types and the diff algorithm
-- [`CLI.md`](docs/CLI.md) — commands, flags, exit codes
-- [`TUI.md`](docs/TUI.md) — screens, keybindings, filter UX
-- [`ROADMAP.md`](docs/ROADMAP.md) — phased implementation plan and what's left
-
 ## Development
 
 ```sh
