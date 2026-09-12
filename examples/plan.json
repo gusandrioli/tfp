@@ -19,7 +19,26 @@
           "force_destroy": false,
           "tags": {
             "team": "platform"
-          }
+          },
+          "versioning": [
+            {
+              "enabled": true,
+              "mfa_delete": false
+            }
+          ],
+          "server_side_encryption_configuration": [
+            {
+              "rule": [
+                {
+                  "apply_server_side_encryption_by_default": [
+                    {
+                      "sse_algorithm": "AES256"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         },
         "after_unknown": {
           "id": true,
@@ -43,7 +62,12 @@
         "before": {
           "id": "i-0a1b2c3d4e5f6789",
           "instance_type": "t3.medium",
-          "ami": "ami-0abcdef1234567890"
+          "ami": "ami-0abcdef1234567890",
+          "subnet_id": "subnet-0a1b2c3d",
+          "tags": {
+            "Name": "legacy-worker",
+            "team": "platform"
+          }
         },
         "after": null,
         "after_unknown": {},
@@ -66,7 +90,11 @@
         "after": {
           "cidr_block": "10.0.0.0/24",
           "availability_zone": "us-east-1a",
-          "map_public_ip_on_launch": false
+          "map_public_ip_on_launch": false,
+          "tags": {
+            "Tier": "private",
+            "Name": "private-0"
+          }
         },
         "after_unknown": {
           "id": true,
@@ -91,7 +119,11 @@
         "after": {
           "cidr_block": "10.0.1.0/24",
           "availability_zone": "us-east-1b",
-          "map_public_ip_on_launch": false
+          "map_public_ip_on_launch": false,
+          "tags": {
+            "Tier": "private",
+            "Name": "private-1"
+          }
         },
         "after_unknown": {
           "id": true,
@@ -126,7 +158,14 @@
           "role_ref": {
             "kind": "Role",
             "name": "elastic-agent"
-          }
+          },
+          "subject": [
+            {
+              "kind": "ServiceAccount",
+              "name": "elastic-agent",
+              "namespace": "elastic-integrations"
+            }
+          ]
         },
         "after": {
           "id": "elastic-integrations/quoter-elastic-agent",
@@ -142,7 +181,14 @@
           "role_ref": {
             "kind": "Role",
             "name": "elastic-agent-v2"
-          }
+          },
+          "subject": [
+            {
+              "kind": "ServiceAccount",
+              "name": "elastic-agent",
+              "namespace": "elastic-integrations"
+            }
+          ]
         },
         "after_unknown": {},
         "before_sensitive": {},
@@ -166,7 +212,61 @@
             "namespace": "elastic-integrations",
             "labels": {
               "app.kubernetes.io/name": "elastic-agent",
-              "app.kubernetes.io/version": "9.2.2"
+              "app.kubernetes.io/version": "9.2.2",
+              "app.kubernetes.io/managed-by": "terraform"
+            }
+          },
+          "spec": {
+            "replicas": 2,
+            "selector": {
+              "match_labels": {
+                "app.kubernetes.io/name": "elastic-agent"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app.kubernetes.io/name": "elastic-agent"
+                }
+              },
+              "spec": {
+                "container": [
+                  {
+                    "name": "elastic-agent",
+                    "image": "docker.elastic.co/beats/elastic-agent:8.15.0",
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "256Mi"
+                      }
+                    },
+                    "port": [
+                      {
+                        "container_port": 8220,
+                        "protocol": "TCP"
+                      }
+                    ],
+                    "env": [
+                      {
+                        "name": "LOG_LEVEL",
+                        "value": "info"
+                      },
+                      {
+                        "name": "NODE_NAME",
+                        "value_from": {
+                          "field_ref": {
+                            "field_path": "spec.nodeName"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
             }
           }
         },
@@ -176,7 +276,61 @@
             "namespace": "elastic-integrations",
             "labels": {
               "app.kubernetes.io/name": "elastic-agent",
-              "app.kubernetes.io/version": "9.2.4"
+              "app.kubernetes.io/version": "9.2.4",
+              "app.kubernetes.io/managed-by": "terraform"
+            }
+          },
+          "spec": {
+            "replicas": 2,
+            "selector": {
+              "match_labels": {
+                "app.kubernetes.io/name": "elastic-agent"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app.kubernetes.io/name": "elastic-agent"
+                }
+              },
+              "spec": {
+                "container": [
+                  {
+                    "name": "elastic-agent",
+                    "image": "docker.elastic.co/beats/elastic-agent:8.15.0",
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "256Mi"
+                      }
+                    },
+                    "port": [
+                      {
+                        "container_port": 8220,
+                        "protocol": "TCP"
+                      }
+                    ],
+                    "env": [
+                      {
+                        "name": "LOG_LEVEL",
+                        "value": "info"
+                      },
+                      {
+                        "name": "NODE_NAME",
+                        "value_from": {
+                          "field_ref": {
+                            "field_path": "spec.nodeName"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
             }
           }
         },
@@ -202,8 +356,12 @@
             "namespace": "elastic-integrations",
             "labels": {
               "app.kubernetes.io/name": "elastic-agent",
-              "app.kubernetes.io/version": "9.2.2"
+              "app.kubernetes.io/version": "9.2.2",
+              "app.kubernetes.io/managed-by": "terraform"
             }
+          },
+          "data": {
+            "elastic-agent.yml": "outputs:\n  default:\n    type: elasticsearch\n    hosts: [\"elasticsearch:9200\"]\n"
           }
         },
         "after": {
@@ -212,8 +370,12 @@
             "namespace": "elastic-integrations",
             "labels": {
               "app.kubernetes.io/name": "elastic-agent",
-              "app.kubernetes.io/version": "9.2.4"
+              "app.kubernetes.io/version": "9.2.4",
+              "app.kubernetes.io/managed-by": "terraform"
             }
+          },
+          "data": {
+            "elastic-agent.yml": "outputs:\n  default:\n    type: elasticsearch\n    hosts: [\"elasticsearch:9200\"]\n"
           }
         },
         "after_unknown": {},
@@ -233,6 +395,7 @@
           "update"
         ],
         "before": {
+          "id": "observability/otel-collector",
           "metadata": {
             "name": "otel-collector",
             "namespace": "observability",
@@ -240,9 +403,21 @@
               "app.kubernetes.io/name": "otel-collector",
               "app.kubernetes.io/version": "9.2.2"
             }
-          }
+          },
+          "role_ref": {
+            "kind": "Role",
+            "name": "otel-collector"
+          },
+          "subject": [
+            {
+              "kind": "ServiceAccount",
+              "name": "otel-collector",
+              "namespace": "observability"
+            }
+          ]
         },
         "after": {
+          "id": "observability/otel-collector",
           "metadata": {
             "name": "otel-collector",
             "namespace": "observability",
@@ -250,7 +425,18 @@
               "app.kubernetes.io/name": "otel-collector",
               "app.kubernetes.io/version": "9.2.4"
             }
-          }
+          },
+          "role_ref": {
+            "kind": "Role",
+            "name": "otel-collector"
+          },
+          "subject": [
+            {
+              "kind": "ServiceAccount",
+              "name": "otel-collector",
+              "namespace": "observability"
+            }
+          ]
         },
         "after_unknown": {},
         "before_sensitive": {},
@@ -276,6 +462,59 @@
               "app.kubernetes.io/name": "otel-collector",
               "app.kubernetes.io/version": "9.2.2"
             }
+          },
+          "spec": {
+            "replicas": 3,
+            "selector": {
+              "match_labels": {
+                "app.kubernetes.io/name": "otel-collector"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app.kubernetes.io/name": "otel-collector"
+                }
+              },
+              "spec": {
+                "container": [
+                  {
+                    "name": "otel-collector",
+                    "image": "otel/opentelemetry-collector-contrib:0.108.0",
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "256Mi"
+                      }
+                    },
+                    "port": [
+                      {
+                        "container_port": 4317,
+                        "protocol": "TCP"
+                      }
+                    ],
+                    "env": [
+                      {
+                        "name": "LOG_LEVEL",
+                        "value": "info"
+                      },
+                      {
+                        "name": "NODE_NAME",
+                        "value_from": {
+                          "field_ref": {
+                            "field_path": "spec.nodeName"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
           }
         },
         "after": {
@@ -285,6 +524,59 @@
             "labels": {
               "app.kubernetes.io/name": "otel-collector",
               "app.kubernetes.io/version": "9.2.4"
+            }
+          },
+          "spec": {
+            "replicas": 3,
+            "selector": {
+              "match_labels": {
+                "app.kubernetes.io/name": "otel-collector"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app.kubernetes.io/name": "otel-collector"
+                }
+              },
+              "spec": {
+                "container": [
+                  {
+                    "name": "otel-collector",
+                    "image": "otel/opentelemetry-collector-contrib:0.108.0",
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "256Mi"
+                      }
+                    },
+                    "port": [
+                      {
+                        "container_port": 4317,
+                        "protocol": "TCP"
+                      }
+                    ],
+                    "env": [
+                      {
+                        "name": "LOG_LEVEL",
+                        "value": "info"
+                      },
+                      {
+                        "name": "NODE_NAME",
+                        "value_from": {
+                          "field_ref": {
+                            "field_path": "spec.nodeName"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
             }
           }
         },
@@ -315,6 +607,10 @@
             }
           },
           "spec": {
+            "type": "ClusterIP",
+            "selector": {
+              "app.kubernetes.io/name": "otel-collector"
+            },
             "port": [
               {
                 "port": 443,
@@ -333,6 +629,10 @@
             }
           },
           "spec": {
+            "type": "ClusterIP",
+            "selector": {
+              "app.kubernetes.io/name": "otel-collector"
+            },
             "port": [
               {
                 "port": 8443,
@@ -371,6 +671,58 @@
               "app.kubernetes.io/name": "fluentbit",
               "app.kubernetes.io/version": "9.2.2"
             }
+          },
+          "spec": {
+            "selector": {
+              "match_labels": {
+                "app.kubernetes.io/name": "fluentbit"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app.kubernetes.io/name": "fluentbit"
+                }
+              },
+              "spec": {
+                "container": [
+                  {
+                    "name": "fluentbit",
+                    "image": "fluent/fluent-bit:3.1.6",
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "256Mi"
+                      }
+                    },
+                    "port": [
+                      {
+                        "container_port": 2020,
+                        "protocol": "TCP"
+                      }
+                    ],
+                    "env": [
+                      {
+                        "name": "LOG_LEVEL",
+                        "value": "info"
+                      },
+                      {
+                        "name": "NODE_NAME",
+                        "value_from": {
+                          "field_ref": {
+                            "field_path": "spec.nodeName"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
           }
         },
         "after": {
@@ -380,6 +732,58 @@
             "labels": {
               "app.kubernetes.io/name": "fluentbit",
               "app.kubernetes.io/version": "9.2.4"
+            }
+          },
+          "spec": {
+            "selector": {
+              "match_labels": {
+                "app.kubernetes.io/name": "fluentbit"
+              }
+            },
+            "template": {
+              "metadata": {
+                "labels": {
+                  "app.kubernetes.io/name": "fluentbit"
+                }
+              },
+              "spec": {
+                "container": [
+                  {
+                    "name": "fluentbit",
+                    "image": "fluent/fluent-bit:3.1.6",
+                    "resources": {
+                      "requests": {
+                        "cpu": "100m",
+                        "memory": "128Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "256Mi"
+                      }
+                    },
+                    "port": [
+                      {
+                        "container_port": 2020,
+                        "protocol": "TCP"
+                      }
+                    ],
+                    "env": [
+                      {
+                        "name": "LOG_LEVEL",
+                        "value": "info"
+                      },
+                      {
+                        "name": "NODE_NAME",
+                        "value_from": {
+                          "field_ref": {
+                            "field_path": "spec.nodeName"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
             }
           }
         },
@@ -400,6 +804,7 @@
           "update"
         ],
         "before": {
+          "id": "observability/fluentbit",
           "metadata": {
             "name": "fluentbit",
             "namespace": "observability",
@@ -407,9 +812,21 @@
               "app.kubernetes.io/name": "fluentbit",
               "app.kubernetes.io/version": "9.2.2"
             }
-          }
+          },
+          "role_ref": {
+            "kind": "Role",
+            "name": "fluentbit"
+          },
+          "subject": [
+            {
+              "kind": "ServiceAccount",
+              "name": "fluentbit",
+              "namespace": "observability"
+            }
+          ]
         },
         "after": {
+          "id": "observability/fluentbit",
           "metadata": {
             "name": "fluentbit",
             "namespace": "observability",
@@ -417,7 +834,18 @@
               "app.kubernetes.io/name": "fluentbit",
               "app.kubernetes.io/version": "9.2.4"
             }
-          }
+          },
+          "role_ref": {
+            "kind": "Role",
+            "name": "fluentbit"
+          },
+          "subject": [
+            {
+              "kind": "ServiceAccount",
+              "name": "fluentbit",
+              "namespace": "observability"
+            }
+          ]
         },
         "after_unknown": {},
         "before_sensitive": {},
@@ -436,6 +864,7 @@
           "update"
         ],
         "before": {
+          "type": "Opaque",
           "metadata": {
             "name": "fluentbit-token",
             "namespace": "observability",
@@ -449,6 +878,7 @@
           }
         },
         "after": {
+          "type": "Opaque",
           "metadata": {
             "name": "fluentbit-token",
             "namespace": "observability",
@@ -490,16 +920,19 @@
           "id": "db-old123",
           "arn": "arn:aws:rds:us-east-1:123456789012:db:db-old123",
           "engine_version": "13.7",
-          "instance_class": "db.r6g.large"
+          "instance_class": "db.r6g.large",
+          "allocated_storage": 100,
+          "multi_az": true
         },
         "after": {
           "instance_class": "db.r6g.large",
-          "engine_version": "15.4"
+          "engine_version": "15.4",
+          "allocated_storage": 100,
+          "multi_az": true
         },
         "after_unknown": {
           "id": true,
-          "arn": true,
-          "engine_version": false
+          "arn": true
         },
         "before_sensitive": {},
         "after_sensitive": {},
