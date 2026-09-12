@@ -12,7 +12,7 @@ carries it — instead of scrolling past it 80 times.
 go install github.com/gusandrioli/tfp/cmd/tfp@latest
 ```
 
-Requires Go 1.26+ and a `terraform` binary on `PATH` (only needed for
+Requires Go 1.24+ and a `terraform` binary on `PATH` (only needed for
 `tfp plan`; `tfp show` works against an already-generated plan file
 without it).
 
